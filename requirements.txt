@@ -1,8 +1,6 @@
-ultralytics==8.2.95
+ultralytics==8.0.196
 opencv-python-headless==4.10.0.84
-numpy
-pillow
 streamlit
-
-# Wajib supaya Streamlit TIDAK install opencv-python
+numpy
+Pillow
 opencv-python==0.0.0
