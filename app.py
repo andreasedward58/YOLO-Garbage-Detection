@@ -1,20 +1,46 @@
+import os
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
+
 import streamlit as st
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 from ultralytics import YOLO
-from PIL import Image
+import av
+import cv2
 import numpy as np
 
-st.title("Trash Detection with YOLOv8")
+st.title("YOLOv8 Trash Detection – Webcam (WebRTC)")
 
+# Load model (gunakan torchscript)
 model = YOLO("best.torchscript")
 
-uploaded = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
 
-if uploaded:
-    img = Image.open(uploaded)
-    img_np = np.array(img)
+# ============================
+# VIDEO TRANSFORMER
+# ============================
 
-    results = model(img_np)
+class YOLOVideoTransformer(VideoTransformerBase):
+    def __init__(self):
+        self.model = model
 
-    result_img = results[0].plot()
+    def transform(self, frame):
+        img = frame.to_ndarray(format="bgr24")
 
-    st.image(result_img, channels="BGR")
+        # YOLO inference
+        results = self.model(img, imgsz=640)
+        annotated = results[0].plot()
+
+        return annotated
+
+
+# ============================
+# STREAMLIT UI
+# ============================
+
+st.write("Klik tombol di bawah untuk mulai webcam:")
+
+webrtc_streamer(
+    key="yolo-webcam",
+    video_transformer_factory=YOLOVideoTransformer,
+    media_stream_constraints={"video": True, "audio": False},
+    async_processing=True,
+)
